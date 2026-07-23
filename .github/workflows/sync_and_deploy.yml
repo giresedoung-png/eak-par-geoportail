@@ -1,0 +1,61 @@
+name: Synchronisation quotidienne EAK-PAR (Kobo -> InfinityFree)
+
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Synchroniser les données depuis KoboToolbox
+        env:
+          KOBO_SERVER: ${{ secrets.KOBO_SERVER }}
+          KOBO_API_TOKEN: ${{ secrets.KOBO_API_TOKEN }}
+          KOBO_ASSET_UID: ${{ secrets.KOBO_ASSET_UID }}
+          SYNC_MEDIA: ${{ secrets.SYNC_MEDIA }}
+          IMAGE_MAX_DIMENSION: "1280"
+          IMAGE_JPEG_QUALITY: "70"
+        run: python3 scripts/kobo_sync.py
+
+      - name: Intégrer les données papier historiques (masques + photos NoteCam)
+        run: python3 scripts/legacy_import.py
+
+      - name: Calculer le PK par référencement linéaire (si tracé RN17 fourni)
+        run: python3 scripts/calcul_pk_lineaire.py
+
+      - name: Fusionner Kobo + historique et calculer les statistiques
+        run: python3 scripts/merge_sources.py
+
+      - name: Publier le contenu du dossier site/ sur InfinityFree (FTP)
+        uses: SamKirkland/[email protected]
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./site/
+          server-dir: ./htdocs/
+          dangerous-clean-slate: false
+
+      - name: Enregistrer le fichier de suivi (checkpoint) pour la prochaine exécution
+        run: |
+          git config user.name "eak-par-bot"
+          git config user.email "actions@github.com"
+          git add scripts/last_sync.json
+          git diff --quiet --cached || git commit -m "chore: mise a jour du checkpoint de synchronisation [skip ci]"
+          git push
