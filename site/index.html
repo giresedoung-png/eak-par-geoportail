@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Géoportail EAK-PAR — Route Ebolowa–Akom II–Kribi (RN17)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/[email protected]/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/[email protected]/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/[email protected]/dist/MarkerCluster.Default.css" />
+<style>
+  html, body, #map { height: 100%; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+  #panel {
+    position: absolute; top: 10px; right: 10px; z-index: 1000;
+    background: white; padding: 12px 16px; border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3); max-width: 280px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  #panel h3 { margin: 0 0 8px 0; font-size: 15px; }
+  #panel h4 { margin: 10px 0 4px 0; font-size: 13px; color: #444; }
+  #panel label { display: block; margin: 4px 0; font-size: 13px; }
+  .popup-photo { max-width: 180px; display: block; margin-top: 6px; border-radius: 4px; }
+  .stat-line { font-size: 13px; margin: 2px 0; }
+  .stat-total { font-size: 22px; font-weight: bold; color: #1a1a1a; }
+  .legend-dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; border: 1px solid #999; vertical-align: middle; }
+  .km-box { background: #f3f4f6; border-radius: 4px; padding: 6px 8px; margin-top: 4px; font-size: 13px; }
+  table.village-stats { font-size: 12px; width: 100%; border-collapse: collapse; margin-top: 4px; }
+  table.village-stats td { padding: 1px 4px; border-bottom: 1px solid #eee; }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div id="panel">
+  <h3>Géoportail EAK-PAR</h3>
+  <div class="stat-total" id="stat-total">—</div>
+  <div class="stat-line">PAP recensées au total</div>
+
+  <h4>Répartition par catégorie</h4>
+  <div class="stat-line"><span class="legend-dot" style="background:#2563eb"></span>Vérification décret (Kobo) : <b id="stat-decret">0</b></div>
+  <div class="stat-line"><span class="legend-dot" style="background:#e07b00"></span>Nouveaux PAP potentiels (Kobo) : <b id="stat-nouveau">0</b></div>
+  <div class="stat-line"><span class="legend-dot" style="background:#6b7280"></span>Papier historique (pré-Kobo) : <b id="stat-papier">0</b></div>
+
+  <h4>Kilométrage couvert (RN17)</h4>
+  <div class="km-box" id="km-box">—</div>
+
+  <h4>Villages couverts</h4>
+  <div class="stat-line">Nombre de villages : <b id="stat-villages">0</b></div>
+  <table class="village-stats" id="village-table"></table>
+
+  <hr>
+  <h4>Filtres d'affichage</h4>
+  <label><input type="checkbox" id="chk-decret" checked> Vérification décret</label>
+  <label><input type="checkbox" id="chk-nouveau" checked> Nouveaux PAP potentiels</label>
+  <label><input type="checkbox" id="chk-papier" checked> Papier historique</label>
+</div>
+
+<script src="https://unpkg.com/[email protected]/dist/leaflet.js"></script>
+<script src="https://unpkg.com/[email protected]/dist/leaflet.markercluster.js"></script>
+<script>
+// =============================================================================
+// CONFIGURATION
+// =============================================================================
+// Couche géographique unifiée (Kobo + papier historique), produite par merge_sources.py
+var DATA_SOURCE = "data/eak_par_final.geojson";
+// Statistiques (effectifs, kilométrage), produites par merge_sources.py
+var STATS_SOURCE = "data/stats.json";
+
+// =============================================================================
+
+var map = L.map('map').setView([2.95, 10.4], 9);
+
+// --- Fonds de carte disponibles (sélecteur en haut à droite de la carte) ---
+var fondOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+});
+
+var fondSatellite = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics', maxZoom: 19 }
+);
+
+var fondTopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM | Style: &copy; OpenTopoMap',
+    maxZoom: 17
+});
+
+var fondClair = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    maxZoom: 19
+});
+
+fondOSM.addTo(map); // fond par défaut au chargement
+
+L.control.layers({
+  "Plan (OpenStreetMap)": fondOSM,
+  "Satellite (Esri)": fondSatellite,
+  "Relief (OpenTopoMap)": fondTopo,
+  "Fond clair (CartoDB)": fondClair,
+}, null, { position: 'topleft', collapsed: true }).addTo(map);
+
+var markersDecret = L.markerClusterGroup();
+var markersNouveau = L.markerClusterGroup();
+var markersPapier = L.markerClusterGroup();
+
+// Trois catégories distinctes : couleur ET forme différentes pour rester
+// lisible même en cas de daltonisme ou d'impression en noir et blanc.
+function styleIcon(color, shape) {
+  var baseStyle = `background:${color};box-shadow:0 0 3px rgba(0,0,0,0.5);border:2px solid white;`;
+  var html;
+  if (shape === 'square') {
+    html = `<div style="${baseStyle}width:12px;height:12px;"></div>`;
+  } else if (shape === 'triangle') {
+    html = `<div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:13px solid ${color};filter:drop-shadow(0 0 2px rgba(0,0,0,0.5));"></div>`;
+  } else {
+    html = `<div style="${baseStyle}width:14px;height:14px;border-radius:50%;"></div>`;
+  }
+  return L.divIcon({ className: '', html: html, iconSize: [14, 14] });
+}
+
+var LABELS_CATEGORIE = {
+  photo_repondant: "Portrait",
+  batiment_concession: "Bâtiment / concession",
+  cultures: "Cultures",
+  tombe: "Tombe",
+  piece_identite: "Pièce d'identité",
+  infrastructure_eau: "Infrastructure eau",
+  infrastructure_communautaire: "Infrastructure communautaire",
+};
+
+function buildPopup(props) {
+  var typeLabel = props.type_fiche === 'decret' ? 'Vérification décret' : 'Nouveau PAP potentiel';
+  var sourceLabel = props.source === 'papier_historique' ? 'Papier historique (pré-Kobo)' : 'KoboToolbox';
+  var html = `<b>${props.nom_prenom_cm || 'Non renseigné'}</b><br>`;
+  html += `Catégorie : ${typeLabel}<br>`;
+  html += `Origine : ${sourceLabel}<br>`;
+  html += `Village : ${props.village || '—'}<br>`;
+  html += `Tronçon : ${props.troncon || '—'}<br>`;
+  html += `PK : ${props.pk || '—'}<br>`;
+  html += `Date d'enquête : ${props.date_enquete || '—'}<br>`;
+
+  var photos = [];
+  try { photos = JSON.parse(props.photos_json || '[]'); } catch (e) { photos = []; }
+  if (photos.length > 0) {
+    html += `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">`;
+    photos.forEach(function(p) {
+      var label = LABELS_CATEGORIE[p.champ] || p.champ;
+      html += `<div style="text-align:center;">` +
+              `<img class="popup-photo" style="max-width:80px;" src="${p.chemin}" title="${label}">` +
+              `<div style="font-size:10px;color:#555;">${label}</div></div>`;
+    });
+    html += `</div>`;
+  }
+  return html;
+}
+
+fetch(DATA_SOURCE)
+  .then(r => r.json())
+  .then(geojson => {
+    geojson.features.forEach(function(feature) {
+      var coords = feature.geometry.coordinates;
+      var latlng = [coords[1], coords[0]];
+      var props = feature.properties;
+      var isPapier = props.source === 'papier_historique';
+      var isDecret = props.type_fiche === 'decret';
+
+      var marker;
+      if (isPapier) {
+        marker = L.marker(latlng, { icon: styleIcon('#6b7280', 'triangle') }).bindPopup(buildPopup(props));
+        markersPapier.addLayer(marker);
+      } else if (isDecret) {
+        marker = L.marker(latlng, { icon: styleIcon('#2563eb', 'circle') }).bindPopup(buildPopup(props));
+        markersDecret.addLayer(marker);
+      } else {
+        marker = L.marker(latlng, { icon: styleIcon('#e07b00', 'square') }).bindPopup(buildPopup(props));
+        markersNouveau.addLayer(marker);
+      }
+    });
+    map.addLayer(markersDecret);
+    map.addLayer(markersNouveau);
+    map.addLayer(markersPapier);
+
+    var allLayers = [...markersDecret.getLayers(), ...markersNouveau.getLayers(), ...markersPapier.getLayers()];
+    if (allLayers.length) {
+      var group = L.featureGroup(allLayers);
+      map.fitBounds(group.getBounds().pad(0.1));
+    }
+  })
+  .catch(err => {
+    console.error("Erreur de chargement des données :", err);
+    document.getElementById('panel').innerHTML +=
+      '<p style="color:red;font-size:12px;">Impossible de charger ' + DATA_SOURCE +
+      '. Vérifiez le chemin ou lancez la synchronisation.</p>';
+  });
+
+fetch(STATS_SOURCE)
+  .then(r => r.json())
+  .then(stats => {
+    document.getElementById('stat-total').textContent = stats.total_pap ?? '—';
+    document.getElementById('stat-decret').textContent = (stats.par_type_fiche && stats.par_type_fiche.decret) || 0;
+    document.getElementById('stat-nouveau').textContent = (stats.par_type_fiche && stats.par_type_fiche.nouveau) || 0;
+    document.getElementById('stat-papier').textContent = (stats.par_source && stats.par_source.papier_historique) || 0;
+    document.getElementById('stat-villages').textContent = stats.nb_villages_couverts ?? 0;
+
+    var km = stats.kilometrage || {};
+    if (km.pk_min_km !== null && km.pk_min_km !== undefined) {
+      document.getElementById('km-box').innerHTML =
+        `PK ${km.pk_min_km} → PK ${km.pk_max_km}<br>` +
+        `<b>${km.etendue_km} km</b> couverts (${km.nb_points_avec_pk} point(s) avec PK renseigné)`;
+    } else {
+      document.getElementById('km-box').textContent = "Aucun PK renseigné pour le moment.";
+    }
+
+    var villageTable = document.getElementById('village-table');
+    var villages = Object.entries(stats.par_village || {}).sort((a,b) => b[1]-a[1]);
+    villages.forEach(function([nom, count]) {
+      if (nom === 'Non Renseigne') return;
+      var row = document.createElement('tr');
+      row.innerHTML = `<td>${nom}</td><td style="text-align:right;font-weight:bold;">${count}</td>`;
+      villageTable.appendChild(row);
+    });
+  })
+  .catch(err => console.error("Erreur de chargement des statistiques :", err));
+
+document.getElementById('chk-decret').addEventListener('change', function(e) {
+  if (e.target.checked) map.addLayer(markersDecret); else map.removeLayer(markersDecret);
+});
+document.getElementById('chk-nouveau').addEventListener('change', function(e) {
+  if (e.target.checked) map.addLayer(markersNouveau); else map.removeLayer(markersNouveau);
+});
+document.getElementById('chk-papier').addEventListener('change', function(e) {
+  if (e.target.checked) map.addLayer(markersPapier); else map.removeLayer(markersPapier);
+});
+</script>
+</body>
+</html>
