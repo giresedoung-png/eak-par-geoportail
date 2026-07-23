@@ -43,7 +43,7 @@ jobs:
         run: python3 scripts/merge_sources.py
 
       - name: Publier le contenu du dossier site/ sur InfinityFree (FTP)
-        uses: SamKirkland/[email protected]
+        uses: Samkirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
