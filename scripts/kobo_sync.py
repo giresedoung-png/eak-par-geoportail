@@ -141,14 +141,12 @@ def api_get(url, params=None):
 
 
 def fetch_all_submissions(checkpoint):
-    """Récupère toutes les soumissions, avec pagination, en ne demandant que
-    les nouvelles/modifiées depuis le dernier passage si un checkpoint existe."""
+    """Récupère toutes les soumissions, avec pagination."""
     url = f"{KOBO_SERVER}/api/v2/assets/{ASSET_UID}/data/"
     all_results = []
     params = {"limit": PAGE_SIZE, "start": 0}
 
-    # Filtre incrémental : on ne redemande que ce qui est postérieur au dernier sync
-log("Récupération de toutes les soumissions (mode complet)")
+    log("Récupération de toutes les soumissions (mode complet)")
 
     while True:
         data = api_get(url, params=params)
