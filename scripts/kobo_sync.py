@@ -148,12 +148,7 @@ def fetch_all_submissions(checkpoint):
     params = {"limit": PAGE_SIZE, "start": 0}
 
     # Filtre incrémental : on ne redemande que ce qui est postérieur au dernier sync
-    if checkpoint.get("last_submission_time"):
-        query = json.dumps({"_submission_time": {"$gt": checkpoint["last_submission_time"]}})
-        params["query"] = query
-        log(f"Synchronisation incrémentale depuis {checkpoint['last_submission_time']}")
-    else:
-        log("Première synchronisation : récupération de toutes les soumissions")
+log("Récupération de toutes les soumissions (mode complet)")
 
     while True:
         data = api_get(url, params=params)
