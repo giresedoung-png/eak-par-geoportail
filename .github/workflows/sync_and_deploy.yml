@@ -49,7 +49,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./site/
-          server-dir: ./htdocs/
+          server-dir: ./
           dangerous-clean-slate: false
 
       - name: Enregistrer le fichier de suivi (checkpoint) pour la prochaine exécution
