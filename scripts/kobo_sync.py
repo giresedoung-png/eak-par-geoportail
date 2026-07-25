@@ -88,25 +88,28 @@ REPEAT_GROUPS = {
     "arbres_concession": "C_identification_nouveau/C4_biens_actifs/rep_arbres_concession",
 }
 
-# Champs de type image/signature à télécharger comme pièces jointes
-ATTACHMENT_FIELDS = [
-    "B_verif_decret/rep_pap_decret/signature_pap_decret",
-    "B_verif_decret/signature_enqueteur_b",
-    "B_verif_decret/signature_support_icm_b",
-    "B_verif_decret/signature_supervision_mdc_b",
-    "B_verif_decret/signature_chef_village_b",
-    "B_verif_decret/photo_repondant_b",
-    "C_identification_nouveau/C_annexe1_photos/photo_1_vue_generale",
-    "C_identification_nouveau/C_annexe1_photos/photo_2_batiments",
-    "C_identification_nouveau/C_annexe1_photos/photo_3_cultures",
-    "C_identification_nouveau/C_annexe1_photos/photo_4_pap_visage",
-    "C_identification_nouveau/C_annexe1_photos/photo_5_piece_identite",
-    "C_identification_nouveau/C_annexe1_photos/photo_6_tombe_infra",
-    "C_identification_nouveau/C7_cloture_signatures/signature_cm_pap",
-    "C_identification_nouveau/C7_cloture_signatures/signature_temoin",
-    "C_identification_nouveau/C7_cloture_signatures/signature_enqueteur_c7",
-    "C_identification_nouveau/C7_cloture_signatures/signature_superviseur",
-]
+# Champs de type image/signature à télécharger comme pièces jointes, avec leur
+# catégorie d'affichage (utilisée par la page Leaflet pour regrouper/étiqueter
+# correctement chaque pièce jointe dans l'info-bulle : photo principale,
+# signature du PAP, ou signature d'un tiers/témoin officiel).
+ATTACHMENT_FIELDS = {
+    "B_verif_decret/rep_pap_decret/signature_pap_decret": "signature",
+    "B_verif_decret/photo_repondant_b": "photo_repondant",
+    "B_verif_decret/signature_enqueteur_b": "signature_officielle",
+    "B_verif_decret/signature_support_icm_b": "signature_officielle",
+    "B_verif_decret/signature_supervision_mdc_b": "signature_officielle",
+    "B_verif_decret/signature_chef_village_b": "signature_officielle",
+    "C_identification_nouveau/C_annexe1_photos/photo_1_vue_generale": "batiment_concession",
+    "C_identification_nouveau/C_annexe1_photos/photo_2_batiments": "batiment_concession",
+    "C_identification_nouveau/C_annexe1_photos/photo_3_cultures": "cultures",
+    "C_identification_nouveau/C_annexe1_photos/photo_4_pap_visage": "photo_repondant",
+    "C_identification_nouveau/C_annexe1_photos/photo_5_piece_identite": "piece_identite",
+    "C_identification_nouveau/C_annexe1_photos/photo_6_tombe_infra": "tombe",
+    "C_identification_nouveau/C7_cloture_signatures/signature_cm_pap": "signature",
+    "C_identification_nouveau/C7_cloture_signatures/signature_temoin": "signature_officielle",
+    "C_identification_nouveau/C7_cloture_signatures/signature_enqueteur_c7": "signature_officielle",
+    "C_identification_nouveau/C7_cloture_signatures/signature_superviseur": "signature_officielle",
+}
 
 HEADERS = {"Authorization": f"Token {API_TOKEN}"}
 PAGE_SIZE = 1000
@@ -262,6 +265,64 @@ def build_attachments_index(submission):
 
 
 # =============================================================================
+# RÉSOLUTION DES NOMS DE PAP (module décret)
+# =============================================================================
+# Dans le module de vérification décret, le champ "nom_prenom_pap" est un
+# select_one dont la VALEUR BRUTE renvoyée par l'API est le code interne du
+# choix (ex. "pap_0037"), pas le nom affiché. Il faut donc récupérer une fois
+# la liste des choix du formulaire (via l'API) pour retrouver le nom complet.
+_choices_cache = None
+
+
+def fetch_pap_choices_labels():
+    """Récupère la définition du formulaire (une seule fois, mise en cache)
+    et construit un dictionnaire {code_choix: nom_complet} pour la liste
+    'pap_decret_list', en extrayant juste le nom (avant le premier ' — ')."""
+    global _choices_cache
+    if _choices_cache is not None:
+        return _choices_cache
+
+    _choices_cache = {}
+    try:
+        url = f"{KOBO_SERVER}/api/v2/assets/{ASSET_UID}/?format=json"
+        data = api_get(url)
+        choices = (data.get("content") or {}).get("choices") or []
+        for choice in choices:
+            if choice.get("list_name") != "pap_decret_list":
+                continue
+            code = choice.get("name")
+            label_field = choice.get("label")
+            label = label_field[0] if isinstance(label_field, list) and label_field else label_field
+            if code and label:
+                nom_seul = str(label).split(" — ")[0].strip()
+                _choices_cache[code] = nom_seul
+        log(f"  {len(_choices_cache)} nom(s) de PAP-décret chargé(s) depuis le formulaire.")
+    except Exception as e:
+        log(f"  ⚠ Impossible de récupérer la liste des noms PAP-décret : {e}")
+    return _choices_cache
+
+
+def resoudre_nom_pap_decret(sub):
+    """Retrouve le nom de la PAP pour une soumission du module décret :
+    priorité à la saisie manuelle (si 'PAP non listée' a été choisie),
+    sinon résolution du code de la liste déroulante vers son nom complet."""
+    rep = sub.get("B_verif_decret/rep_pap_decret", [])
+    if not rep or not isinstance(rep, list):
+        return None
+    premiere_ligne = rep[0]
+    manuel = premiere_ligne.get("nom_prenom_pap_manuel")
+    if manuel:
+        return manuel
+    code = premiere_ligne.get("nom_prenom_pap")
+    if not code:
+        return None
+    if code.startswith("autre_pap_"):
+        return None  # "PAP non listée" sans saisie manuelle renseignée
+    labels = fetch_pap_choices_labels()
+    return labels.get(code, code)  # à défaut de correspondance, retourne le code brut (visible, pas silencieux)
+
+
+# =============================================================================
 # TRAITEMENT PRINCIPAL
 # =============================================================================
 
@@ -280,6 +341,13 @@ def process_submissions(submissions):
         geopoint_raw = find_geopoint(sub)
         lat, lon, alt, prec = parse_geopoint(geopoint_raw)
 
+        # Le nom du chef de ménage/PAP se trouve à un endroit différent selon
+        # le module utilisé (décret vs nouveau) — les deux sont couverts ici.
+        if sub.get("type_fiche") == "decret":
+            nom_prenom = resoudre_nom_pap_decret(sub)
+        else:
+            nom_prenom = sub.get("C_identification_nouveau/C2_chef_menage/nom_prenom_cm")
+
         row = {
             "_uuid": uuid,
             "_id": submission_id,
@@ -291,8 +359,7 @@ def process_submissions(submissions):
             "village": sub.get("A_identification_generale/village"),
             "date_enquete": sub.get("A_identification_generale/date_enquete"),
             "pk": sub.get("A_identification_generale/pk"),
-            "nom_prenom_cm": sub.get(
-                "C_identification_nouveau/C2_chef_menage/nom_prenom_cm"),
+            "nom_prenom_cm": nom_prenom,
             "latitude": lat,
             "longitude": lon,
             "altitude": alt,
@@ -301,13 +368,13 @@ def process_submissions(submissions):
         main_rows.append(row)
 
         # --- Téléchargement des pièces jointes ---
-        for field_path in ATTACHMENT_FIELDS:
+        for field_path, categorie in ATTACHMENT_FIELDS.items():
             local_path = download_attachment(sub, field_path, attachments_index, sub_media_dir)
             if local_path:
                 manifest_rows.append({
                     "_uuid": uuid,
                     "_id": submission_id,
-                    "champ": field_path,
+                    "champ": categorie,
                     "chemin_local": local_path,
                 })
 
