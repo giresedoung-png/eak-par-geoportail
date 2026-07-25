@@ -360,7 +360,16 @@ def main():
         results = compute_pk_for_rows(pap_rows, line)
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         with open(OUT_PK_PAP, "w", newline="", encoding="utf-8") as f:
-            keys = list(results[0].keys())
+            # Les données Kobo et papier historique n'ont pas exactement les
+            # mêmes colonnes (ex. 'source', 'nb_photos_associees' propres au
+            # papier) : on prend l'union de toutes les clés rencontrées,
+            # plutôt que celles de la seule première ligne, pour éviter toute
+            # erreur si les deux sources sont mélangées.
+            keys = []
+            for r in results:
+                for k in r.keys():
+                    if k not in keys:
+                        keys.append(k)
             writer = csv.DictWriter(f, fieldnames=keys)
             writer.writeheader()
             writer.writerows(results)
