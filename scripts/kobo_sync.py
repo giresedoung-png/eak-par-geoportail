@@ -300,11 +300,22 @@ def obtenir_champ_repetable(sub, chemin_groupe_repetition, nom_champ, diagnostiq
 
     rep = sub.get(chemin_groupe_repetition)
     if isinstance(rep, list) and rep:
-        valeur = rep[0].get(nom_champ)
+        premiere_ligne = rep[0]
+        # Format (b) : le champ est sous son nom simple dans le dictionnaire
+        valeur = premiere_ligne.get(nom_champ)
         if valeur:
             if diagnostiquer:
                 log(f"  [diagnostic] '{nom_champ}' trouvé via liste de répétition "
-                    f"'{chemin_groupe_repetition}[0][\"{nom_champ}\"]'")
+                    f"'{chemin_groupe_repetition}[0][\"{nom_champ}\"]' (nom simple)")
+            return valeur
+        # Format (c) : le champ garde son chemin complet comme clé, MÊME à
+        # l'intérieur du dictionnaire de la répétition (variante observée en
+        # pratique sur ce formulaire)
+        valeur = premiere_ligne.get(cle_plate)
+        if valeur:
+            if diagnostiquer:
+                log(f"  [diagnostic] '{nom_champ}' trouvé via liste de répétition "
+                    f"'{chemin_groupe_repetition}[0][\"{cle_plate}\"]' (chemin complet)")
             return valeur
 
     if diagnostiquer:
