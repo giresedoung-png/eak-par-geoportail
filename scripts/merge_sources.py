@@ -108,16 +108,26 @@ def dedupe_kobo_vs_legacy(kobo_rows, legacy_rows):
     """Détecte les PAP présentes à la fois dans les données Kobo (temps réel)
     et dans les données papier historiques (même personne saisie deux fois :
     une fois sur papier, une fois re-vérifiée via Kobo). En cas de
-    correspondance forte (même village + nom très similaire), la ligne
+    correspondance FORTE (même village + nom quasi identique), la ligne
     papier est fusionnée dans la ligne Kobo (source de vérité la plus
     récente) plutôt que comptée une seconde fois.
+
+    Seuil volontairement strict (0.90) : deux personnes différentes portant
+    des noms proches dans le même village ne doivent JAMAIS être fusionnées
+    à tort — un doublon non détecté (compté deux fois) est un moindre mal
+    qu'une vraie PAP distincte supprimée silencieusement par erreur. Les
+    correspondances "moyennes" (0.72 à 0.90) sont journalisées pour examen
+    manuel, mais jamais fusionnées automatiquement.
     """
-    DEDUPE_THRESHOLD = 0.72
+    DEDUPE_THRESHOLD = 0.90
+    SEUIL_SIGNALEMENT = 0.72  # en dessous : pas assez proche pour même être mentionné
     kept_legacy = []
     n_fusions = 0
+    a_verifier_manuellement = []
+
     for lrow in legacy_rows:
         lv, ln = normalize_village(lrow.get("village")), lrow.get("nom_prenom_cm") or ""
-        match = None
+        meilleur_match, meilleur_score = None, 0.0
         for krow in kobo_rows:
             kv, kn = normalize_village(krow.get("village")), krow.get("nom_prenom_cm") or ""
             if kv != lv:
@@ -125,23 +135,36 @@ def dedupe_kobo_vs_legacy(kobo_rows, legacy_rows):
             score = difflib.SequenceMatcher(
                 None, ln.lower().strip(), kn.lower().strip()
             ).ratio()
-            if score >= DEDUPE_THRESHOLD:
-                match = krow
-                break
-        if match:
+            if score > meilleur_score:
+                meilleur_score, meilleur_match = score, krow
+
+        if meilleur_match and meilleur_score >= DEDUPE_THRESHOLD:
+            match = meilleur_match
             n_fusions += 1
             match["_a_egalement_une_fiche_papier"] = "oui"
             match.setdefault("source", "kobo")
             # Si Kobo n'a pas encore de photo/coordonnées mais que le papier en a, on complète
             if not match.get("latitude") and lrow.get("latitude"):
                 match["latitude"], match["longitude"] = lrow["latitude"], lrow["longitude"]
-            print(f"  ↳ Fusion : « {ln} » ({lv}) déjà présent côté Kobo — non recompté.")
+            print(f"  ↳ Fusion : « {ln} » ({lv}) déjà présent côté Kobo (score {meilleur_score:.2f}) — non recompté.")
         else:
             kept_legacy.append(lrow)
+            if meilleur_match and meilleur_score >= SEUIL_SIGNALEMENT:
+                kn_proche = meilleur_match.get("nom_prenom_cm") or ""
+                a_verifier_manuellement.append(
+                    f"« {ln} » (papier, {lv}) proche de « {kn_proche} » (Kobo) — "
+                    f"score {meilleur_score:.2f}, sous le seuil de fusion automatique (0.90) : conservées séparées"
+                )
 
     if n_fusions:
         print(f"{n_fusions} PAP papier fusionnée(s) avec une entrée Kobo existante "
               f"(évite le double comptage).")
+    if a_verifier_manuellement:
+        print(f"\n⚠ {len(a_verifier_manuellement)} correspondance(s) proche(s) mais sous le seuil "
+              f"de fusion automatique — à vérifier manuellement si besoin (probablement des "
+              f"personnes distinctes, conservées comme telles par prudence) :")
+        for ligne in a_verifier_manuellement:
+            print(f"    - {ligne}")
     return kept_legacy
 
 
