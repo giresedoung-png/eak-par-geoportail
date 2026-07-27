@@ -308,10 +308,10 @@ def obtenir_champ_repetable(sub, chemin_groupe_repetition, nom_champ, diagnostiq
             return valeur
 
     if diagnostiquer:
+        rep_brut = sub.get(chemin_groupe_repetition)
         log(f"  [diagnostic] '{nom_champ}' INTROUVABLE (ni clé plate '{cle_plate}', "
-            f"ni dans la liste '{chemin_groupe_repetition}'). Clés présentes à la racine "
-            f"contenant 'rep_pap_decret' ou 'nom_prenom' : " +
-            str([k for k in sub.keys() if "rep_pap_decret" in k or "nom_prenom" in k]))
+            f"ni dans la liste '{chemin_groupe_repetition}'). "
+            f"Contenu brut de '{chemin_groupe_repetition}' (type {type(rep_brut).__name__}) : {repr(rep_brut)[:500]}")
     return None
 
 
