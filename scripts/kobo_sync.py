@@ -216,7 +216,15 @@ def download_attachment(submission, field_path, attachments_index, dest_dir):
     automatiquement compressées (IMAGE_MAX_DIMENSION / IMAGE_JPEG_QUALITY)."""
     if not SYNC_MEDIA:
         return None
-    filename_value = submission.get(field_path)
+    # Champ potentiellement à l'intérieur d'une répétition (ex. la signature
+    # du PAP dans rep_pap_decret) : on utilise la même recherche robuste que
+    # pour la résolution des noms, plutôt qu'un simple accès direct qui
+    # échouerait silencieusement selon le format renvoyé par l'API Kobo.
+    if "rep_pap_decret/" in field_path:
+        chemin_rep, nom_champ = field_path.rsplit("/", 1)
+        filename_value = obtenir_champ_repetable(submission, chemin_rep, nom_champ)
+    else:
+        filename_value = submission.get(field_path)
     if not filename_value:
         return None
     # Kobo référence l'attachment par son nom de fichier dans le champ texte,
@@ -274,6 +282,39 @@ def build_attachments_index(submission):
 _choices_cache = None
 
 
+def obtenir_champ_repetable(sub, chemin_groupe_repetition, nom_champ, diagnostiquer=False):
+    """Récupère un champ situé à l'intérieur d'un groupe répétable, en gérant
+    les deux formats possibles renvoyés par l'API Kobo selon les versions :
+      (a) le champ est retrouvable directement sous forme de clé complète
+          'chemin_groupe_repetition/nom_champ' au niveau racine de la soumission ;
+      (b) le groupe répétable est une VRAIE liste de dictionnaires, et le champ
+          se trouve sous son nom simple ('nom_champ') dans le premier élément.
+    Essaie (a) puis (b), et journalise (une seule fois) la méthode qui a
+    fonctionné, pour faciliter le diagnostic en cas de souci futur."""
+    cle_plate = f"{chemin_groupe_repetition}/{nom_champ}"
+    valeur = sub.get(cle_plate)
+    if valeur:
+        if diagnostiquer:
+            log(f"  [diagnostic] '{nom_champ}' trouvé via clé plate '{cle_plate}'")
+        return valeur
+
+    rep = sub.get(chemin_groupe_repetition)
+    if isinstance(rep, list) and rep:
+        valeur = rep[0].get(nom_champ)
+        if valeur:
+            if diagnostiquer:
+                log(f"  [diagnostic] '{nom_champ}' trouvé via liste de répétition "
+                    f"'{chemin_groupe_repetition}[0][\"{nom_champ}\"]'")
+            return valeur
+
+    if diagnostiquer:
+        log(f"  [diagnostic] '{nom_champ}' INTROUVABLE (ni clé plate '{cle_plate}', "
+            f"ni dans la liste '{chemin_groupe_repetition}'). Clés présentes à la racine "
+            f"contenant 'rep_pap_decret' ou 'nom_prenom' : " +
+            str([k for k in sub.keys() if "rep_pap_decret" in k or "nom_prenom" in k]))
+    return None
+
+
 def fetch_pap_choices_labels():
     """Récupère la définition du formulaire (une seule fois, mise en cache)
     et construit un dictionnaire {code_choix: nom_complet} pour la liste
@@ -302,24 +343,37 @@ def fetch_pap_choices_labels():
     return _choices_cache
 
 
+_diagnostic_deja_affiche = False
+
+
 def resoudre_nom_pap_decret(sub):
     """Retrouve le nom de la PAP pour une soumission du module décret :
     priorité à la saisie manuelle (si 'PAP non listée' a été choisie),
     sinon résolution du code de la liste déroulante vers son nom complet."""
-    rep = sub.get("B_verif_decret/rep_pap_decret", [])
-    if not rep or not isinstance(rep, list):
-        return None
-    premiere_ligne = rep[0]
-    manuel = premiere_ligne.get("nom_prenom_pap_manuel")
+    global _diagnostic_deja_affiche
+    afficher_diag = not _diagnostic_deja_affiche
+    if afficher_diag:
+        log("  [diagnostic] Analyse de la 1ère soumission 'décret' pour localiser le nom de la PAP...")
+        _diagnostic_deja_affiche = True
+
+    chemin_rep = "B_verif_decret/rep_pap_decret"
+    manuel = obtenir_champ_repetable(sub, chemin_rep, "nom_prenom_pap_manuel", diagnostiquer=afficher_diag)
     if manuel:
         return manuel
-    code = premiere_ligne.get("nom_prenom_pap")
+    code = obtenir_champ_repetable(sub, chemin_rep, "nom_prenom_pap", diagnostiquer=afficher_diag)
     if not code:
         return None
     if code.startswith("autre_pap_"):
         return None  # "PAP non listée" sans saisie manuelle renseignée
     labels = fetch_pap_choices_labels()
-    return labels.get(code, code)  # à défaut de correspondance, retourne le code brut (visible, pas silencieux)
+    nom_resolu = labels.get(code)
+    if afficher_diag:
+        if nom_resolu:
+            log(f"  [diagnostic] Code '{code}' résolu en nom : '{nom_resolu}'")
+        else:
+            log(f"  [diagnostic] ⚠ Code '{code}' ABSENT du dictionnaire de {len(labels)} noms chargés "
+                f"— le code brut sera affiché faute de correspondance.")
+    return nom_resolu or code  # à défaut de correspondance, retourne le code brut (visible, pas silencieux)
 
 
 # =============================================================================
