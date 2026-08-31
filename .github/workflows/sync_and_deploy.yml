@@ -39,6 +39,9 @@ jobs:
       - name: Calculer le PK par référencement linéaire (si tracé RN17 fourni)
         run: python3 scripts/calcul_pk_lineaire.py
 
+      - name: Analyser les PAP en zone tampon de l'emprise
+        run: python3 scripts/analyse_emprise.py
+
       - name: Fusionner Kobo + historique et calculer les statistiques
         run: python3 scripts/merge_sources.py
 
