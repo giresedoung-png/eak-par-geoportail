@@ -48,6 +48,10 @@
   <table class="village-stats" id="village-table"></table>
 
   <hr>
+  <h4>Rapports téléchargeables</h4>
+  <div id="rapports-telechargeables" class="stat-line" style="color:#999;">Vérification en cours…</div>
+
+  <hr>
   <h4>Filtres d'affichage</h4>
   <label><input type="checkbox" id="chk-decret" checked> Vérification décret</label>
   <label><input type="checkbox" id="chk-nouveau" checked> Nouveaux PAP potentiels</label>
@@ -70,6 +74,11 @@ var STATS_SOURCE = "data/stats.json";
 // topographique est complété par l'équipe Topographie.
 var EMPRISE_SOURCE = "data/emprise_rn17.geojson";
 var AXE_SOURCE = "data/axe_rn17.geojson";
+// Rapport Excel des PAP situées dans la zone tampon de l'emprise, produit
+// par analyse_emprise.py — vérifié à l'ouverture pour n'afficher le bouton
+// de téléchargement que si le fichier existe réellement (évite un lien mort
+// tant que le levé topographique n'a pas encore été traité).
+var RAPPORT_ZONE_TAMPON = "data/PAP_Zone_Tampon_Par_Village.xlsx";
 
 // =============================================================================
 
@@ -277,6 +286,27 @@ fetch(AXE_SOURCE)
     }).addTo(coucheAxe);
   })
   .catch(err => console.warn("Axe RN17 non disponible pour le moment :", err));
+
+// --- Rapport Excel : PAP en zone tampon de l'emprise (par village) ---
+// Une requête HEAD vérifie que le fichier existe avant d'afficher le bouton,
+// pour ne jamais proposer un lien mort si le rapport n'a pas encore été
+// généré (ex. avant le premier traitement du levé topographique).
+fetch(RAPPORT_ZONE_TAMPON, { method: 'HEAD' })
+  .then(r => {
+    var zone = document.getElementById('rapports-telechargeables');
+    if (r.ok) {
+      zone.innerHTML = `<a href="${RAPPORT_ZONE_TAMPON}" download ` +
+        `style="display:inline-block;padding:6px 10px;background:#c0392b;color:white;` +
+        `border-radius:4px;text-decoration:none;font-size:12px;">` +
+        `⬇ PAP en zone tampon de l'emprise (.xlsx)</a>`;
+    } else {
+      zone.textContent = "Aucun rapport de zone tampon disponible pour le moment.";
+    }
+  })
+  .catch(() => {
+    document.getElementById('rapports-telechargeables').textContent =
+      "Aucun rapport de zone tampon disponible pour le moment.";
+  });
 
 fetch(STATS_SOURCE)
   .then(r => r.json())
