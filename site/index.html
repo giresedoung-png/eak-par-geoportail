@@ -64,6 +64,12 @@
 var DATA_SOURCE = "data/eak_par_final.geojson";
 // Statistiques (effectifs, kilométrage), produites par merge_sources.py
 var STATS_SOURCE = "data/stats.json";
+// Emprise réelle de la RN17 (polygone) et axe central, déduits du levé
+// topographique d'implantation par generer_emprise_geojson.py — se mettent
+// à jour automatiquement à chaque synchronisation dès que le fichier Excel
+// topographique est complété par l'équipe Topographie.
+var EMPRISE_SOURCE = "data/emprise_rn17.geojson";
+var AXE_SOURCE = "data/axe_rn17.geojson";
 
 // =============================================================================
 
@@ -92,12 +98,28 @@ var fondClair = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}
 
 fondOSM.addTo(map); // fond par défaut au chargement
 
-L.control.layers({
-  "Plan (OpenStreetMap)": fondOSM,
-  "Satellite (Esri)": fondSatellite,
-  "Relief (OpenTopoMap)": fondTopo,
-  "Fond clair (CartoDB)": fondClair,
-}, null, { position: 'topleft', collapsed: true }).addTo(map);
+// --- Couches superposées (emprise réelle + axe central du levé topographique) ---
+// Groupes vides créés dès maintenant pour être référencés par le contrôle de
+// calques ci-dessous ; leur contenu est peuplé de façon asynchrone plus bas
+// (une fois les fichiers GeoJSON chargés), sans bloquer l'affichage de la carte.
+var coucheEmprise = L.layerGroup();
+var coucheAxe = L.layerGroup();
+
+L.control.layers(
+  {
+    "Plan (OpenStreetMap)": fondOSM,
+    "Satellite (Esri)": fondSatellite,
+    "Relief (OpenTopoMap)": fondTopo,
+    "Fond clair (CartoDB)": fondClair,
+  },
+  {
+    "Emprise réelle RN17 (levé topo)": coucheEmprise,
+    "Axe RN17 (levé topo)": coucheAxe,
+  },
+  { position: 'topleft', collapsed: true }
+).addTo(map);
+
+coucheEmprise.addTo(map); // emprise visible par défaut ; axe central masqué par défaut (référence technique)
 
 var markersDecret = L.markerClusterGroup();
 var markersNouveau = L.markerClusterGroup();
@@ -151,7 +173,6 @@ function buildPopup(props) {
   });
   var signaturesOfficielles = photos.filter(function(p) { return p.champ === 'signature_officielle'; });
 
-  // Bloc principal : portrait du répondant, avec sa signature juste en dessous
   html += `<div style="margin-top:8px;text-align:center;">`;
   if (photoPrincipale) {
     html += `<img class="popup-photo" style="max-width:140px;display:block;margin:0 auto;" ` +
@@ -167,7 +188,6 @@ function buildPopup(props) {
   }
   html += `</div>`;
 
-  // Autres photos (bâtiment, cultures, tombe, pièce d'identité...)
   if (autresPhotos.length > 0) {
     html += `<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">`;
     autresPhotos.forEach(function(p) {
@@ -179,8 +199,6 @@ function buildPopup(props) {
     html += `</div>`;
   }
 
-  // Signatures officielles (enquêteur/témoin/superviseur) : repliées par défaut,
-  // clairement distinguées de la signature du répondant ci-dessus
   if (signaturesOfficielles.length > 0) {
     html += `<details style="margin-top:6px;font-size:10px;color:#777;">` +
             `<summary>Signatures officielles (${signaturesOfficielles.length})</summary>` +
@@ -232,6 +250,33 @@ fetch(DATA_SOURCE)
       '<p style="color:red;font-size:12px;">Impossible de charger ' + DATA_SOURCE +
       '. Vérifiez le chemin ou lancez la synchronisation.</p>';
   });
+
+// --- Emprise réelle de la RN17 (polygone issu du levé topographique) ---
+fetch(EMPRISE_SOURCE)
+  .then(r => { if (!r.ok) throw new Error('fichier absent'); return r.json(); })
+  .then(geojson => {
+    L.geoJSON(geojson, {
+      style: { color: '#c0392b', weight: 1, fillColor: '#e74c3c', fillOpacity: 0.25 }
+    }).bindPopup(function(layer) {
+      var p = layer.feature.properties;
+      return `<b>${p.nom}</b><br>PK ${p.pk_min_km} → PK ${p.pk_max_km} km<br>` +
+             `${p.nb_sections} section(s) relevée(s) par l'équipe Topographie`;
+    }).addTo(coucheEmprise);
+  })
+  .catch(err => console.warn("Emprise réelle RN17 non disponible pour le moment :", err));
+
+// --- Axe central de la RN17 (ligne de référence, masquée par défaut) ---
+fetch(AXE_SOURCE)
+  .then(r => { if (!r.ok) throw new Error('fichier absent'); return r.json(); })
+  .then(geojson => {
+    L.geoJSON(geojson, {
+      style: { color: '#8e44ad', weight: 2, dashArray: '4,4' }
+    }).bindPopup(function(layer) {
+      var p = layer.feature.properties;
+      return `<b>${p.nom}</b><br>PK ${p.pk_min_km} → PK ${p.pk_max_km} km`;
+    }).addTo(coucheAxe);
+  })
+  .catch(err => console.warn("Axe RN17 non disponible pour le moment :", err));
 
 fetch(STATS_SOURCE)
   .then(r => r.json())
