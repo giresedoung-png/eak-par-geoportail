@@ -39,6 +39,9 @@ jobs:
       - name: Calculer le PK par référencement linéaire (si tracé RN17 fourni)
         run: python3 scripts/calcul_pk_lineaire.py
 
+      - name: Générer l'emprise réelle RN17 (levé topographique)
+        run: python3 scripts/generer_emprise_geojson.py
+
       - name: Analyser les PAP en zone tampon de l'emprise
         run: python3 scripts/analyse_emprise.py
 
