@@ -288,25 +288,11 @@ fetch(AXE_SOURCE)
   .catch(err => console.warn("Axe RN17 non disponible pour le moment :", err));
 
 // --- Rapport Excel : PAP en zone tampon de l'emprise (par village) ---
-// Une requête HEAD vérifie que le fichier existe avant d'afficher le bouton,
-// pour ne jamais proposer un lien mort si le rapport n'a pas encore été
-// généré (ex. avant le premier traitement du levé topographique).
-fetch(RAPPORT_ZONE_TAMPON, { method: 'HEAD' })
-  .then(r => {
-    var zone = document.getElementById('rapports-telechargeables');
-    if (r.ok) {
-      zone.innerHTML = `<a href="${RAPPORT_ZONE_TAMPON}" download ` +
-        `style="display:inline-block;padding:6px 10px;background:#c0392b;color:white;` +
-        `border-radius:4px;text-decoration:none;font-size:12px;">` +
-        `⬇ PAP en zone tampon de l'emprise (.xlsx)</a>`;
-    } else {
-      zone.textContent = "Aucun rapport de zone tampon disponible pour le moment.";
-    }
-  })
-  .catch(() => {
-    document.getElementById('rapports-telechargeables').textContent =
-      "Aucun rapport de zone tampon disponible pour le moment.";
-  });
+document.getElementById('rapports-telechargeables').innerHTML =
+  `<a href="${RAPPORT_ZONE_TAMPON}" download ` +
+  `style="display:inline-block;padding:6px 10px;background:#c0392b;color:white;` +
+  `border-radius:4px;text-decoration:none;font-size:12px;">` +
+  `⬇ PAP en zone tampon de l'emprise (.xlsx)</a>`;
 
 fetch(STATS_SOURCE)
   .then(r => r.json())
