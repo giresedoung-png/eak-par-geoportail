@@ -52,7 +52,7 @@ jobs:
           # temps que ce soit résolu avec l'hébergeur. À retirer une fois le
           # problème résolu côté InfinityFree.
           exclude: |
-            **/legacy-00032__*
+            media/legacy/**
       - name: Enregistrer le fichier de suivi (checkpoint) pour la prochaine exécution
         run: |
           git config user.name "eak-par-bot"
