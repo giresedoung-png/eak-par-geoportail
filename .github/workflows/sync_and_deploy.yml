@@ -1,28 +1,22 @@
 name: Synchronisation quotidienne EAK-PAR (Kobo -> InfinityFree)
-
 on:
   schedule:
     - cron: "0 18 * * *"
   workflow_dispatch: {}
-
 permissions:
   contents: write
-
 jobs:
   sync-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4
-
       - name: Installer Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Installer les dépendances
         run: pip install -r requirements.txt
-
       - name: Synchroniser les données depuis KoboToolbox
         env:
           KOBO_SERVER: ${{ secrets.KOBO_SERVER }}
@@ -32,22 +26,16 @@ jobs:
           IMAGE_MAX_DIMENSION: "1280"
           IMAGE_JPEG_QUALITY: "70"
         run: python3 scripts/kobo_sync.py
-
       - name: Intégrer les données papier historiques (masques + photos NoteCam)
         run: python3 scripts/legacy_import.py
-
       - name: Calculer le PK par référencement linéaire (si tracé RN17 fourni)
         run: python3 scripts/calcul_pk_lineaire.py
-
       - name: Générer l'emprise réelle RN17 (levé topographique)
         run: python3 scripts/generer_emprise_geojson.py
-
       - name: Analyser les PAP en zone tampon de l'emprise
         run: python3 scripts/analyse_emprise.py
-
       - name: Fusionner Kobo + historique et calculer les statistiques
         run: python3 scripts/merge_sources.py
-
       - name: Publier le contenu du dossier site/ sur InfinityFree (FTP)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -57,7 +45,14 @@ jobs:
           local-dir: ./site/
           server-dir: ./eakpar.fwh.is/htdocs/
           dangerous-clean-slate: false
-
+          # Contournement temporaire : ces 4 fichiers sont bloqués côté
+          # InfinityFree (erreur "553 Permission denied", y compris via leur
+          # File Manager web — donc un blocage serveur, pas un souci du
+          # pipeline). Exclus ici pour ne pas bloquer tout le déploiement le
+          # temps que ce soit résolu avec l'hébergeur. À retirer une fois le
+          # problème résolu côté InfinityFree.
+          exclude: |
+            **/legacy-00032__*
       - name: Enregistrer le fichier de suivi (checkpoint) pour la prochaine exécution
         run: |
           git config user.name "eak-par-bot"
