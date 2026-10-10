@@ -38,13 +38,16 @@ OUT_AXE = DATA_DIR / "axe_rn17.geojson"
 
 
 def trouver_fichier_topo():
+    """Cherche le levé dans legacy/gis/ : .xlsx (prioritaire) ou .csv brut
+    (export "Liste_coordonnees_BORNES", séparateur ';', colonnes MAT;X;Y;Z)."""
     if not GIS_DIR.exists():
         return None
-    for pattern in FICHIER_TOPO_PATTERNS:
-        pattern_re = pattern.replace("*", ".*")
-        for f in GIS_DIR.iterdir():
-            if f.suffix.lower() == ".xlsx" and re.match(pattern_re, f.stem, re.IGNORECASE):
-                return f
+    for ext in (".xlsx", ".csv"):
+        for pattern in FICHIER_TOPO_PATTERNS + ["*polygo*", "*bornes*"]:
+            pattern_re = pattern.replace("*", ".*")
+            for f in sorted(GIS_DIR.iterdir()):
+                if f.suffix.lower() == ext and re.match(pattern_re, f.stem, re.IGNORECASE):
+                    return f
     return None
 
 
@@ -56,7 +59,8 @@ def vers_latlon(easting, northing):
 def main():
     fichier = trouver_fichier_topo()
     if not fichier:
-        print(f"⚠ Aucun fichier topographique trouvé dans {GIS_DIR}/ — rien à générer.")
+        print(f"::error::Aucun fichier topographique (.xlsx ou .csv) trouvé dans {GIS_DIR}/ — "
+              f"l'emprise ne peut pas être générée.")
         return
 
     print(f"Chargement du levé topographique depuis {fichier.name}...")
@@ -100,7 +104,7 @@ def main():
         }
         with open(OUT_EMPRISE, "w", encoding="utf-8") as f:
             json.dump({"type": "FeatureCollection", "features": [feature_emprise]}, f,
-                      ensure_ascii=False, indent=2)
+                      ensure_ascii=False, separators=(",", ":"))
         print(f"\n  ✓ {OUT_EMPRISE.name} : emprise réelle générée, PK "
               f"{feature_emprise['properties']['pk_min_km']} → "
               f"{feature_emprise['properties']['pk_max_km']} km "
@@ -124,7 +128,7 @@ def main():
     }
     with open(OUT_AXE, "w", encoding="utf-8") as f:
         json.dump({"type": "FeatureCollection", "features": [feature_axe]}, f,
-                  ensure_ascii=False, indent=2)
+                  ensure_ascii=False, separators=(",", ":"))
     print(f"  ✓ {OUT_AXE.name} : axe central généré ({len(ligne_axe)} points)")
 
 

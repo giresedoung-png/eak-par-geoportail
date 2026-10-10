@@ -52,10 +52,15 @@ _to_utm = Transformer.from_crs(CRS_GEO, CRS_UTM, always_xy=True)
 
 def charger_points_topo(chemin_xlsx):
     """Lit le fichier topographique et retourne un dict {pk_metres: {"D":(E,N,alt), "G":(E,N,alt)}}."""
-    wb = openpyxl.load_workbook(chemin_xlsx, data_only=True)
-    ws = wb.active
     points = {}
-    for row in ws.iter_rows(min_row=2, values_only=True):
+    if str(chemin_xlsx).lower().endswith(".csv"):
+        import csv
+        with open(chemin_xlsx, newline="", encoding="latin-1") as fh:
+            lignes = list(csv.reader(fh, delimiter=";"))
+    else:
+        wb = openpyxl.load_workbook(chemin_xlsx, data_only=True)
+        lignes = wb.active.iter_rows(min_row=2, values_only=True)
+    for row in lignes:
         if not row or not row[0]:
             continue
         m = re.match(r"([DG])\.(\d+)", str(row[0]).strip())
@@ -64,9 +69,9 @@ def charger_points_topo(chemin_xlsx):
         cote, pk = m.group(1), int(m.group(2))
         try:
             easting, northing, alt = float(row[1]), float(row[2]), float(row[3])
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, IndexError):
             continue
-        points.setdefault(pk, {})[cote] = (easting, northing, alt)
+        points.setdefault(pk, {}).setdefault(cote, (easting, northing, alt))
     return points
 
 
