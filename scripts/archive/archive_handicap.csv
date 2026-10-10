@@ -1,0 +1,45 @@
+_uuid,_id,_index_repeat,description_handicap,nb_annees_vecues_handicap,duree_origine_handicap,prise_charge_medicale
+5873ec73-279f-487d-8b9c-7c9d294bc9a5,816350178,1,Paralysie des deux membres inférieurs ,45,plus_10ans,non
+cc9bd40b-5ae4-49d7-9432-8f1ff41f3ead,816354414,2,Sourd-muet,24,depuis_naissance,non
+e675f6b2-43f2-46be-bce8-1bc879accafa,816360574,3,Handicap physique,66,depuis_naissance,non
+17de625b-e1c2-470d-9f0c-6ef46dff9acf,818724761,4,Incapacité physique permanente 60%,47,plus_10ans,non
+0a5738a0-b640-409a-9a7d-44f7dcfa2566,818732172,5,Sourdmuet,17,depuis_naissance,non
+e6db35dc-36e9-43eb-8716-b1f3255a1a1a,818733291,6,Trouble de la parole,14,depuis_naissance,non
+070c2d99-7b7c-479a-ba35-0b3d55ca5b14,819891402,7,Déformation de l'oreille après un accident ,14,plus_10ans,non
+a865bc79-1339-4aa1-b9e4-cf199ce7b5c2,820793974,8,Handicapé au pied,2,moins_5ans,non
+ed52765d-4d0b-4941-bb78-37ec7ed910a9,820870572,9,Infirme,53,plus_10ans,non
+12ba711f-9837-4b7e-a748-3438bbf2cdb4,825292164,10,Bras gauche paralysé,5,depuis_naissance,non
+7fc363dc-7061-4c1a-b3e3-43efba45ebc0,832395017,11,Bras emputé,33,plus_10ans,non
+3ae0a176-0b79-4935-9fd1-7b6a9be37de7,832462413,12,Infirmité de pied gauche ,10,plus_10ans,non
+7b697fd6-560e-4a90-ab1f-0a6361bba371,832465992,13,Enfant de 10 an handicapé pied droit suite à une opération chirurgicale ,1,moins_5ans,non
+060a9119-9703-458c-baa4-adea6c1afca1,833419759,14,Handicapé ( pied),14,plus_10ans,non
+a22353aa-7b02-4eea-af93-63686f9aef11,833420717,15,Handicap du pied,5,moins_5ans,non
+67f33bb1-cc83-47cc-969a-fc6307058726,835741922,16,Degré d'invalidité estimé à 80 (jambe rétrécie),44,plus_10ans,non
+fe3b0f32-c284-4d9c-8982-ff0491472be5,835749676,17,Le pied,40,moins_5ans,oui
+fcb93efa-786a-45c7-a297-9dacf8f151e4,835793411,18,Infirmité pied gauche,25,plus_10ans,non
+dcda95ac-5ce6-4120-8465-b382e43f70ab,838062315,19,Accident au niveau de la colonne vertébrale qui réduit la mobilité de la personne ,10,plus_10ans,oui
+5e85ab88-774f-42ed-885a-795b9fc7a55c,840177286,20,Perte d'usage des membres inférieurs,2,moins_5ans,non
+31c5500f-b3db-4d82-bae5-5a8fb3178620,842159320,21,Fille aux Pieds raides,5,depuis_naissance,non
+31c5500f-b3db-4d82-bae5-5a8fb3178620,842159320,22,Attardé mental,13,depuis_naissance,non
+49a05baa-3a50-4935-b2ad-0665013294a8,845455349,23,Handicapé moteur ,52,depuis_naissance,non
+ba78e002-4c2b-4910-ac34-eec77bbe474c,848527357,24,Emputé des deux jambes,10,plus_10ans,non
+f5dfcac1-56df-49a9-ad40-0146fdb167c9,848528718,25,Présence d'une personne naine et bossues,52,depuis_naissance,non
+f5dfcac1-56df-49a9-ad40-0146fdb167c9,848528718,26,Présence d'une femme naine et bossue,34,depuis_naissance,non
+f5dfcac1-56df-49a9-ad40-0146fdb167c9,848528718,27,Présence d'une femme naine et bossue,21,depuis_naissance,non
+cf04baab-39b4-4347-b065-dac64aa07408,848532335,28,Jambe emputée après un accident de la circulation ,2,moins_5ans,oui
+cf04baab-39b4-4347-b065-dac64aa07408,848532335,29,Bras emputé suite à un accident de travail ,1,moins_5ans,oui
+80b3cd3a-e5e8-4ccb-85da-987037f6bd88,855829089,30,Une jambe courte que l'autre ,47,depuis_naissance,non
+68c5a1a9-3e39-48f9-a1be-28cd03a44f4b,855831014,31,Jambe gauche malade et déplacement à l'aide d'une béquille ,1,moins_5ans,oui
+68c5a1a9-3e39-48f9-a1be-28cd03a44f4b,855831014,32,Trouble visuels ,2022,moins_5ans,oui
+40f5176f-8075-4fba-8eae-84c0bfb2b2cf,855835935,33,Main droite et les 02 pieds sont paralysés pas totalement ,20,plus_10ans,non
+429d853e-3a37-4b59-983a-b6ed9f869f6b,859177074,34,"Garçon de 08 ans Infirmité du pied gauche suite à une injection : AKAM Narcisse, élève zu CE2 à l'école publique de Mvieng ",3,moins_5ans,non
+f316f1ba-be6b-4aed-9d24-af3e7cbe09c2,860193420,35,Accident de circulation ayant rétréci la jambe gauche ,11,plus_10ans,oui
+2a317670-0f37-43a5-9d2a-515f88089db8,861143842,36,Femme de plus de 80 ans avec paralysie des membres inférieurs,20,plus_10ans,non
+a0c3c458-d9cc-4625-b2ba-ee17ba7a1eea,862157451,37,Pied gauche après accident de moto ,10,plus_10ans,non
+d31577d2-f494-46fa-9a03-15efe55bcd37,864465134,38,Mal voyant ,10,plus_10ans,non
+d31577d2-f494-46fa-9a03-15efe55bcd37,864465134,39,Mal voyante ,10,plus_10ans,non
+dbdeaf30-1b9f-461c-9d79-bfbd67e26171,864473006,40,Bras et pieds droit paralysés,10,plus_10ans,oui
+065725e7-63bb-48d3-b211-76e0f9f7f343,871479012,41,Myope ,11,depuis_naissance,non
+0137408e-42b2-4d6b-be1e-581746322282,872227404,42,Handicap lié à la vieillesse ,5,plus_10ans,oui
+1fa41081-02c8-4448-a047-6f5b374a4f56,875316693,43,Malvoyant ,35,plus_10ans,non
+c9a79d2f-6623-4952-b5f8-40c61144aa41,878496746,44,Sourd et muet ,16,depuis_naissance,non

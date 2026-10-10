@@ -457,6 +457,88 @@ def process_submissions(submissions):
 
 
 # =============================================================================
+# ARCHIVE PERMANENTE (gel du 30/09/2026) — le Géoportail ne perd plus de fiches
+# =============================================================================
+# Contexte : suite à la saturation du stockage Kobo, les fiches recensées
+# jusqu au 01/10/2026 ont été supprimées côté KoboToolbox. Comme kobo_sync.py
+# relit tout Kobo à chaque exécution, les décomptes du Géoportail baissaient.
+# Désormais, chaque exécution :
+#   1. charge l'archive (scripts/archive/archive_*.csv, versionnée dans Git) ;
+#   2. la fusionne avec ce que Kobo renvoie (Kobo en direct prime, par _uuid :
+#      une fiche corrigée sur Kobo met à jour l'archive) ;
+#   3. réécrit l'archive (toute fiche vue un jour y reste) ;
+#   4. n'enlève une fiche que si elle figure dans scripts/archive/exclusions.txt
+#      (un _uuid par ligne : doublon / fiche réellement à retirer).
+ARCHIVE_DIR = BASE_DIR / "scripts" / "archive"
+EXCLUSIONS_FILE = ARCHIVE_DIR / "exclusions.txt"
+ARCHIVE_ACTIVE = os.environ.get("ARCHIVE_ACTIVE", "true").lower() == "true"
+MAIN_NUMERIC = ("latitude", "longitude", "altitude", "precision_gps")
+
+
+def _read_csv(path):
+    if not path.exists():
+        return []
+    with open(path, newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def _write_csv(rows, path):
+    if not rows:
+        return
+    keys = []
+    for r in rows:
+        for k in r:
+            if k not in keys:
+                keys.append(k)
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=keys)
+        w.writeheader()
+        w.writerows(r for r in rows)
+
+
+def _typed_main(r):
+    r = dict(r)
+    for k in MAIN_NUMERIC:
+        v = r.get(k)
+        try:
+            r[k] = float(v) if v not in (None, "") else None
+        except (TypeError, ValueError):
+            r[k] = None
+    return r
+
+
+def load_exclusions():
+    if not EXCLUSIONS_FILE.exists():
+        return set()
+    return {l.split("#")[0].strip() for l in EXCLUSIONS_FILE.read_text(encoding="utf-8").splitlines()
+            if l.split("#")[0].strip()}
+
+
+def fusionner_avec_archive(nom, live_rows, cle_groupe="_uuid", principal=False, uuids_live=None):
+    """Fusionne les lignes live et archivées. Une fiche (_uuid) présente en live
+    REMPLACE intégralement sa version archivée (toutes ses lignes, pour les
+    groupes répétables) ; sinon la version archivée est conservée."""
+    arch_path = ARCHIVE_DIR / f"archive_{nom}.csv"
+    archived = _read_csv(arch_path)
+    exclus = load_exclusions()
+    live_uuids = set(uuids_live) if uuids_live is not None else {r.get(cle_groupe) for r in live_rows}
+    kept = [r for r in archived if r.get(cle_groupe) not in live_uuids]
+    if principal:
+        kept = [_typed_main(r) for r in kept]
+        for r in kept:
+            r.setdefault("_origine", "archive")
+        for r in live_rows:
+            r["_origine"] = "kobo_direct"
+    merged = [r for r in kept + list(live_rows) if r.get(cle_groupe) not in exclus]
+    if principal:
+        # on archive la version fusionnée (sans les exclusions)
+        _write_csv([{k: ("" if v is None else v) for k, v in r.items()} for r in merged], arch_path)
+    else:
+        _write_csv(merged, arch_path)
+    return merged, len(kept)
+
+
+# =============================================================================
 # EXPORTS
 # =============================================================================
 
@@ -534,11 +616,21 @@ def main():
     checkpoint = load_checkpoint()
     submissions = fetch_all_submissions(checkpoint)
 
-    if not submissions and checkpoint.get("last_submission_time"):
+    if not submissions and checkpoint.get("last_submission_time") and not ARCHIVE_ACTIVE:
         log("Aucune nouvelle soumission depuis la dernière synchronisation.")
         return
 
     main_rows, repeat_rows, manifest_rows = process_submissions(submissions)
+
+    if ARCHIVE_ACTIVE:
+        n_live = len(main_rows)
+        uuids_live = {r.get("_uuid") for r in main_rows}
+        main_rows, n_arch = fusionner_avec_archive("principal", main_rows, principal=True)
+        log(f"Archive (gel au 01/10/2026) : {n_live} fiches Kobo en direct + {n_arch} fiches conservées "
+            f"depuis l'archive = {len(main_rows)} fiches publiées.")
+        for key in list(repeat_rows):
+            repeat_rows[key], _ = fusionner_avec_archive(key, repeat_rows[key], uuids_live=uuids_live)
+        manifest_rows, _ = fusionner_avec_archive("manifest_media", manifest_rows, uuids_live=uuids_live)
 
     log("Export des fichiers...")
     export_csv(main_rows, DATA_DIR / "eak_par_principal.csv")

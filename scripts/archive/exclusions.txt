@@ -1,0 +1,3 @@
+# _uuid à retirer définitivement du Géoportail (un par ligne, # = commentaire).
+# À utiliser uniquement pour un doublon ou une fiche à retirer volontairement ;
+# la suppression d'une fiche sur Kobo, elle, ne la retire PLUS du Géoportail.
