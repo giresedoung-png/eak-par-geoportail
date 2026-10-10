@@ -261,7 +261,7 @@ fetch(DATA_SOURCE)
   });
 
 // --- Emprise réelle de la RN17 (polygone issu du levé topographique) ---
-fetch(EMPRISE_SOURCE)
+fetch(EMPRISE_SOURCE + "?v=" + Date.now(), { cache: "no-store" })
   .then(r => { if (!r.ok) throw new Error('fichier absent'); return r.json(); })
   .then(geojson => {
     L.geoJSON(geojson, {
@@ -272,10 +272,14 @@ fetch(EMPRISE_SOURCE)
              `${p.nb_sections} section(s) relevée(s) par l'équipe Topographie`;
     }).addTo(coucheEmprise);
   })
-  .catch(err => console.warn("Emprise réelle RN17 non disponible pour le moment :", err));
+  .catch(err => {
+    console.warn("Emprise réelle RN17 non disponible pour le moment :", err);
+    document.getElementById('panel').innerHTML +=
+      '<p style="color:#c0392b;font-size:12px;">Emprise RN17 non chargée (' + EMPRISE_SOURCE + ' : ' + err.message + ').</p>';
+  });
 
 // --- Axe central de la RN17 (ligne de référence, masquée par défaut) ---
-fetch(AXE_SOURCE)
+fetch(AXE_SOURCE + "?v=" + Date.now(), { cache: "no-store" })
   .then(r => { if (!r.ok) throw new Error('fichier absent'); return r.json(); })
   .then(geojson => {
     L.geoJSON(geojson, {
