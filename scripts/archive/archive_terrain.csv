@@ -1,4 +1,8 @@
 _uuid,_id,_index_repeat,titre_type_occupation_terrain,numero_titre_foncier,superficie_totale_terrain,superficie_affectee_terrain,usage_terrain,kp_terrain
+bf9e5702-c119-400c-b60f-9ce6aeba6df7,885447513,0,Parcelle privée ,107,30000,567.72,Habitation ,
+a5a601b7-a57a-4ab1-a8f3-23fe03160522,885450141,1,Titre foncier,321,36.8,36.8,Espace commercial ,PK 0+20
+ac8ed322-d0e8-4332-a7e3-95d7aa4c7e88,890878727,2,Habitation,396,753,372.06,Construction  de la maison,
+04d62b5b-bad3-4750-babc-58fd3f0cdb7c,891963342,3,Terrain privé,449,20000,648,,
 6153124a-a4f2-40fa-9f0c-22c2827d1238,818726584,1,,,,,Subsistence,
 220c3e14-2937-4914-8ba4-4907c1bcf368,832392790,2,Résidence ,,10000,2000,Résidence et cultures ,
 7fc363dc-7061-4c1a-b3e3-43efba45ebc0,832395017,3,,,1606.05,1606.05,Champ de manioc,

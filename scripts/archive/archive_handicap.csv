@@ -1,4 +1,8 @@
 _uuid,_id,_index_repeat,description_handicap,nb_annees_vecues_handicap,duree_origine_handicap,prise_charge_medicale
+2b11ac79-ad29-40d2-972b-ed7e53a46b24,885441943,0,Aveugle,2,moins_5ans,non
+4beb2368-2aa7-4af3-91c2-6946e78a5ecd,886361255,1,Malade ,1,moins_5ans,oui
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,2,Malvoyant,5,moins_5ans,non
+5b86e6f1-f29d-4205-8357-0e8c239ad323,897051150,3,Cécité,2,moins_5ans,oui
 5873ec73-279f-487d-8b9c-7c9d294bc9a5,816350178,1,Paralysie des deux membres inférieurs ,45,plus_10ans,non
 cc9bd40b-5ae4-49d7-9432-8f1ff41f3ead,816354414,2,Sourd-muet,24,depuis_naissance,non
 e675f6b2-43f2-46be-bce8-1bc879accafa,816360574,3,Handicap physique,66,depuis_naissance,non

@@ -1,4 +1,89 @@
 _uuid,_id,_index_repeat,espece_arbre,nom_local_arbre,utilite_arbre,ombrage_arbre,fr_productif_arbre,fr_non_productif_arbre,nb_existant_arbre,nb_impacte_arbre
+81681fd4-2dc0-49a6-87b7-bf6b0e847531,885435073,0,Plantains Adulte et jeunes,Ekon,,oui,20,27,47,47
+c61d4f17-68cb-47a2-8b52-549088b4d0f3,885435497,1,Cocotier ,Mbanga ,,oui,1,,1,1
+c61d4f17-68cb-47a2-8b52-549088b4d0f3,885435497,2,Plantains adultes et jeunes ,Ekon,,oui,4,25,29,29
+c61d4f17-68cb-47a2-8b52-549088b4d0f3,885435497,3,Pamplemoussier ,Pample,,oui,1,,1,1
+c61d4f17-68cb-47a2-8b52-549088b4d0f3,885435497,4,Palmier,Alen,,oui,3,,3,3
+c61d4f17-68cb-47a2-8b52-549088b4d0f3,885435497,5,Hévéa ,Ndamba,,oui,50,,50,50
+d7e59006-d4da-4d9f-9e4f-9fb1d36e28d1,885436815,6,Plantains jeunes ,Ekon,,non,,3,3,3
+d7e59006-d4da-4d9f-9e4f-9fb1d36e28d1,885436815,7,Citronier jeune,Ngo'ombang ,,non,,1,1,1
+32c19a25-5424-4119-acce-3c4683d50ca5,885441794,8,,,,non,,,,
+2b4f6ef1-18d8-43e1-ba7d-c3f9b8713c0f,885442602,9,Cocotier ,Mbanga ,Consommation ,non,3,,3,3
+2b4f6ef1-18d8-43e1-ba7d-c3f9b8713c0f,885442602,10,Orangier,Ofumbi,Consommation ,non,3,,3,3
+2b4f6ef1-18d8-43e1-ba7d-c3f9b8713c0f,885442602,11,Manguier ,Ando'o ,Consommation ,non,3,,3,3
+2b4f6ef1-18d8-43e1-ba7d-c3f9b8713c0f,885442602,12,Cacao,Keka,Vente,non,4,,4,4
+2b4f6ef1-18d8-43e1-ba7d-c3f9b8713c0f,885442602,13,Plantain ,Ekon,Consommation ,non,13,,13,13
+2b4f6ef1-18d8-43e1-ba7d-c3f9b8713c0f,885442602,14,Palmier ,Alen,Consommation ,non,2,,2,2
+f6fc7e62-b4dd-48cc-b414-ac184469d9c4,885443343,15,Banane plantain,Adjoué,Consommation,non,8,2,10,10
+f6fc7e62-b4dd-48cc-b414-ac184469d9c4,885443343,16,Manguier,Ando'o,Consommation,non,1,,1,1
+bf9e5702-c119-400c-b60f-9ce6aeba6df7,885447513,17,,,,non,,,,
+e92be96a-8d09-411f-97fd-cacf0078c302,886617450,18,Cacaoyers adultes,Keka,,oui,50,,50,50
+e92be96a-8d09-411f-97fd-cacf0078c302,886617450,19,Palmiers améliorés adultes,Alen,,oui,35,,35,35
+e92be96a-8d09-411f-97fd-cacf0078c302,886617450,20,Bananiers adultes et jeunes,Adjue,,oui,75,125,200,200
+e92be96a-8d09-411f-97fd-cacf0078c302,886617450,21,Safourtiers adultes,Sa,,oui,7,,7,7
+e92be96a-8d09-411f-97fd-cacf0078c302,886617450,22,Manguiers adultes,Ando'o,,oui,8,,8,8
+e92be96a-8d09-411f-97fd-cacf0078c302,886617450,23,Avocatiers adultes,Fio,,oui,1,,1,1
+e92be96a-8d09-411f-97fd-cacf0078c302,886617450,24,Ananas,Zek,,non,231,,231,231
+e92be96a-8d09-411f-97fd-cacf0078c302,886617450,25,Macabo,Ekabe,,non,30,,30,30
+cf98b7ed-a656-42f4-9ee1-c86c6514aeaf,886645882,26,,,,oui,3,,3,3
+1953695c-196c-460e-bc71-cf9e01f408d4,887317121,27,Arbre ornemental ,,1,oui,,,1,1
+49c615a4-3862-4fb4-8867-15442cf5b1cc,887321492,28,Banane plantain,Ekon,Consommation et vente,non,,,17,17
+bf718d87-8d4b-44c2-8236-b8ddfca8520d,887321946,29,Citron ,Citronier ,Consommation ,oui,1,,1,1
+4d971708-8bae-4c4a-842a-ddfb937c8c6e,887326901,30,Cocotier,Mbanga,Consommation,non,2,,2,
+b43adb20-741b-4177-af5c-3cffef8dc747,887327018,31,,,,non,,,,
+a5201326-c392-4f5f-b673-dde35ef76188,887327777,32,,,,non,,,,
+445183c0-be38-4244-a441-bc3d5aea9057,887348344,33,Cacaoyer ,Kekaa ,Vente ,non,3,0,3,3
+445183c0-be38-4244-a441-bc3d5aea9057,887348344,34,Safoutier ,Saa,Consommation et vente ,oui,1,1,2,2
+445183c0-be38-4244-a441-bc3d5aea9057,887348344,35,Cocotier,Mbanga ,Consommation et vente ,non,1,0,1,1
+445183c0-be38-4244-a441-bc3d5aea9057,887348344,36,Banane douce ,Adjoe ,Consommation et vente ,non,15,10,25,25
+3b6f646f-b1e9-42a1-89c6-19515668fd3e,887538771,37,Manguier adulte ,Ando'o ,,oui,1,,1,1
+3b6f646f-b1e9-42a1-89c6-19515668fd3e,887538771,38,Safourtier ,Sa ,,oui,1,,1,1
+3b6f646f-b1e9-42a1-89c6-19515668fd3e,887538771,39,Citronnier ,Ngo'ombang ,,oui,1,,1,1
+3b6f646f-b1e9-42a1-89c6-19515668fd3e,887538771,40,Avocatier adulte ,Fio,,oui,1,1,1,1
+3b6f646f-b1e9-42a1-89c6-19515668fd3e,887538771,41,Bananiers plantains adultes ,Ekon,,oui,3,,3,3
+3b6f646f-b1e9-42a1-89c6-19515668fd3e,887538771,42,Canne à sucre ,Mkok,,non,39,,39,39
+4f703374-7233-4882-9c3f-aafa95a99f51,887539376,43,Cocotier adulte ,Mbanga ,,oui,1,,1,1
+4f703374-7233-4882-9c3f-aafa95a99f51,887539376,44,Mandarinier adulte ,Ofumbi,,oui,1,,1,1
+4f703374-7233-4882-9c3f-aafa95a99f51,887539376,45,Plantains adultes ,Ekon,,oui,3,,3,3
+4f703374-7233-4882-9c3f-aafa95a99f51,887539376,46,Bananiers adultes et jeunes ,Adjue ,,oui,161,70,231,231
+4f703374-7233-4882-9c3f-aafa95a99f51,887539376,47,Palmier local Adulte ,Alen,,non,,3,3,3
+c89d64a5-ddfd-4bf0-b029-f90f9ec21231,887540180,48,Manguier adulte ,Ando'o ,,oui,1,,1,1
+c89d64a5-ddfd-4bf0-b029-f90f9ec21231,887540180,49,Goyaviers adultes ,Afele,,oui,3,,3,3
+c89d64a5-ddfd-4bf0-b029-f90f9ec21231,887540180,50,Safourtier ,Sa,,oui,2,,2,2
+c89d64a5-ddfd-4bf0-b029-f90f9ec21231,887540180,51,Cerisier ,Cerisier ,,oui,1,1,1,1
+c89d64a5-ddfd-4bf0-b029-f90f9ec21231,887540180,52,Avocatier adulte ,Fio,,oui,1,,1,1
+c89d64a5-ddfd-4bf0-b029-f90f9ec21231,887540180,53,Mandarinier adulte ,Ofumbi ,,oui,1,,1,1
+c89d64a5-ddfd-4bf0-b029-f90f9ec21231,887540180,54,Cacaoyer jeune ,Keka,,non,,1,1,1
+c89d64a5-ddfd-4bf0-b029-f90f9ec21231,887540180,55,Canne à sucre ,Mkok,,non,22,,22,22
+c89d64a5-ddfd-4bf0-b029-f90f9ec21231,887540180,56,Ananas ,Zek,,oui,10,,10,10
+4741ab3f-0d52-48cd-81fa-e90190fd9b86,889482424,57,Plantains adultes et jeunes ,Ekon ,,oui,55,90,145,145
+4741ab3f-0d52-48cd-81fa-e90190fd9b86,889482424,58,Cacaoyers adultes ,Keka,,oui,120,,120,120
+2de16615-af2e-438b-866f-1bcef482e6ca,890606978,59,,,,non,,,,
+ac8ed322-d0e8-4332-a7e3-95d7aa4c7e88,890878727,60,,,,non,,,,
+9f8c36c0-060e-4ec9-b7ad-6b30b3144b2d,892751944,61,,,,non,,,,
+6db2ae5a-517a-4ae1-b131-aa6661bfd0a0,893684145,62,,,,non,,,,
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,63,Avocatier,Fio,Consommation et vente,oui,10,2,12,12
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,64,Palmier local,Alen,Consommation et vente,non,3,5,8,8
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,65,Banane douce,Adjoe,Consommation et vente,non,20,10,30,30
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,66,Goyavier,Afele,Consommation et vente,non,2,2,4,4
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,67,Corrossolier,Ebom,Consommation et vente,oui,2,0,2,2
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,68,Papayer,Fofo,Consommation et vente,non,2,0,2,2
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,69,Safoutier,Assa,Consommation et vente,oui,2,3,5,5
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,70,Cacaoyer,Keka,Vente,non,3,2,5,5
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,71,Colatier,Abel,Consommation et vente,non,2,0,2,2
+31100bdc-0941-47a3-ba01-cc7d5c47ff38,896211577,72,Banane plantain,Ekon,Consommation et vente,non,10,15,25,25
+995d32f0-8b35-40fd-a73e-ca565b261eb6,897050945,73,Orangers jeunes,Ofumbi,,non,,2,2,2
+df1cd582-b90f-4506-94b6-1e7806ed08e6,897566845,74,,,,non,,,,
+0f6d8c9f-32db-49bd-b22c-02660282d39e,898429388,75,Palmier local ,Alen ,Consommation et vente ,non,36,25,61,61
+0f6d8c9f-32db-49bd-b22c-02660282d39e,898429388,76,Banane douce ,Ekon ,Consommation et vente ,non,30,35,65,65
+0f6d8c9f-32db-49bd-b22c-02660282d39e,898429388,77,Cassamango ,,Consommation et vente ,oui,1,0,1,1
+a3e025d4-5e96-4a04-9cb0-c54cb4bb0d2e,898430926,78,,,,non,,,,
+6bf7306e-2b6e-46dc-98ab-ee8e90d8c4f7,898431881,79,Palmier,Alen,Vente,non,6,3,9,9
+6bf7306e-2b6e-46dc-98ab-ee8e90d8c4f7,898431881,80,Banane Plantain,Ekon,Consommation,non,,5,5,5
+6bf7306e-2b6e-46dc-98ab-ee8e90d8c4f7,898431881,81,Cocotier,Mbanga,Consommation,non,1,,1,1
+6bf7306e-2b6e-46dc-98ab-ee8e90d8c4f7,898431881,82,Goyavier,Afele,Consommation,non,1,,1,1
+c588468b-3dc3-4641-bb48-887821a3d323,900462740,83,Cocotier,Mbanga,Consommation,non,2,,2,2
+c588468b-3dc3-4641-bb48-887821a3d323,900462740,84,Manguier,Ando'o,Consommation,non,2,,2,2
 ec0bca3f-30ea-4357-a05c-e85f3b6eaa99,816348742,1,Banane ,Adjoe ,Consommation ,non,,,5,5
 ec0bca3f-30ea-4357-a05c-e85f3b6eaa99,816348742,2,Manioc ,Afobo mbong,20,non,,,20,20
 5873ec73-279f-487d-8b9c-7c9d294bc9a5,816350178,3,Safoutier ,Assa,3,oui,3,0,3,3

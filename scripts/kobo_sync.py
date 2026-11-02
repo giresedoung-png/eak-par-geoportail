@@ -414,7 +414,13 @@ def process_submissions(submissions):
             nom_prenom = sub.get("C_identification_nouveau/C2_chef_menage/nom_prenom_cm")
 
         row = {
-            "_uuid": uuid,
+            "_uuid": _nettoyer_uuid(uuid),
+            # Identité stable d'une fiche : quand une fiche est modifiée dans Kobo,
+            # son _uuid change mais meta/rootUuid (fiche d'origine) reste identique.
+            # Sans cela, une fiche éditée serait comptée deux fois (version archivée
+            # + version modifiée en direct).
+            "_root_uuid": _nettoyer_uuid(sub.get("meta/rootUuid")),
+            "_deprecated_uuid": _nettoyer_uuid(sub.get("meta/deprecatedID")),
             "_id": submission_id,
             "_submission_time": submission_time,
             "type_fiche": sub.get("type_fiche"),
@@ -457,7 +463,7 @@ def process_submissions(submissions):
 
 
 # =============================================================================
-# ARCHIVE PERMANENTE (gel du 30/09/2026) — le Géoportail ne perd plus de fiches
+# ARCHIVE PERMANENTE (gel du 27/10/2026) — le Géoportail ne perd plus de fiches
 # =============================================================================
 # Contexte : suite à la saturation du stockage Kobo, les fiches recensées
 # jusqu au 01/10/2026 ont été supprimées côté KoboToolbox. Comme kobo_sync.py
@@ -514,28 +520,71 @@ def load_exclusions():
             if l.split("#")[0].strip()}
 
 
-def fusionner_avec_archive(nom, live_rows, cle_groupe="_uuid", principal=False, uuids_live=None):
-    """Fusionne les lignes live et archivées. Une fiche (_uuid) présente en live
-    REMPLACE intégralement sa version archivée (toutes ses lignes, pour les
-    groupes répétables) ; sinon la version archivée est conservée."""
-    arch_path = ARCHIVE_DIR / f"archive_{nom}.csv"
-    archived = _read_csv(arch_path)
+def _nettoyer_uuid(v):
+    return str(v or "").replace("uuid:", "").strip()
+
+
+def _identites(r):
+    """Ensemble des identifiants désignant une même fiche : _uuid courant,
+    fiche d'origine (rootUuid) et version précédente (deprecatedID)."""
+    return {x for x in (_nettoyer_uuid(r.get("_uuid")), _nettoyer_uuid(r.get("_root_uuid")),
+                        _nettoyer_uuid(r.get("_deprecated_uuid"))) if x}
+
+
+def fusionner_principal(live_rows):
+    """Fusionne Kobo en direct et archive SANS DOUBLON : toute fiche archivée
+    qui partage au moins un identifiant (_uuid, rootUuid, deprecatedID) avec une
+    fiche en direct est remplacée par la version en direct. Retourne
+    (lignes_fusionnées, uuids_archivés_remplacés, nb_conservées)."""
+    arch_path = ARCHIVE_DIR / "archive_principal.csv"
+    archived = [_typed_main(r) for r in _read_csv(arch_path)]
     exclus = load_exclusions()
-    live_uuids = set(uuids_live) if uuids_live is not None else {r.get(cle_groupe) for r in live_rows}
-    kept = [r for r in archived if r.get(cle_groupe) not in live_uuids]
-    if principal:
-        kept = [_typed_main(r) for r in kept]
-        for r in kept:
-            r.setdefault("_origine", "archive")
-        for r in live_rows:
-            r["_origine"] = "kobo_direct"
-    merged = [r for r in kept + list(live_rows) if r.get(cle_groupe) not in exclus]
-    if principal:
-        # on archive la version fusionnée (sans les exclusions)
-        _write_csv([{k: ("" if v is None else v) for k, v in r.items()} for r in merged], arch_path)
-    else:
-        _write_csv(merged, arch_path)
-    return merged, len(kept)
+
+    index = {}
+    for i, a in enumerate(archived):
+        for x in _identites(a):
+            index.setdefault(x, set()).add(i)
+    remplacees = set()
+    for l in live_rows:
+        for x in _identites(l):
+            remplacees |= index.get(x, set())
+    uuids_remplaces = {archived[i].get("_uuid") for i in remplacees}
+    kept = [a for i, a in enumerate(archived) if i not in remplacees]
+    for r in kept:
+        r["_origine"] = r.get("_origine") or "archive"
+    for r in live_rows:
+        r["_origine"] = "kobo_direct"
+
+    # Garde-fou final : aucune identité ne doit apparaître sur deux fiches
+    # (la version en direct prime, puis la plus ancienne ligne).
+    merged, deja = [], {}
+    for r in list(live_rows) + kept:
+        ids = _identites(r)
+        if ids & exclus:
+            continue
+        if any(x in deja for x in ids):
+            log(f"  ⚠ doublon écarté : {r.get('_uuid')} ({r.get('nom_prenom_cm')})")
+            continue
+        for x in ids:
+            deja[x] = True
+        merged.append(r)
+
+    _write_csv([{k: ("" if v is None else v) for k, v in r.items()} for r in merged], arch_path)
+    return merged, uuids_remplaces, len(kept)
+
+
+def fusionner_groupe(nom, live_rows, uuids_live, uuids_remplaces):
+    """Tables liées (groupes répétables, manifeste médias) : les lignes d'une
+    fiche en direct, ou d'une fiche archivée remplacée, sont écartées de
+    l'archive puis remplacées par les lignes en direct."""
+    arch_path = ARCHIVE_DIR / f"archive_{nom}.csv"
+    exclus = load_exclusions()
+    retirer = set(uuids_live) | set(uuids_remplaces)
+    kept = [r for r in _read_csv(arch_path)
+            if r.get("_uuid") not in retirer and r.get("_uuid") not in exclus]
+    merged = kept + list(live_rows)
+    _write_csv(merged, arch_path)
+    return merged
 
 
 # =============================================================================
@@ -625,12 +674,13 @@ def main():
     if ARCHIVE_ACTIVE:
         n_live = len(main_rows)
         uuids_live = {r.get("_uuid") for r in main_rows}
-        main_rows, n_arch = fusionner_avec_archive("principal", main_rows, principal=True)
-        log(f"Archive (gel au 01/10/2026) : {n_live} fiches Kobo en direct + {n_arch} fiches conservées "
-            f"depuis l'archive = {len(main_rows)} fiches publiées.")
+        main_rows, uuids_remplaces, n_arch = fusionner_principal(main_rows)
+        log(f"Archive (gel au 27/10/2026) : {n_live} fiches Kobo en direct + {n_arch} fiches conservées "
+            f"depuis l'archive = {len(main_rows)} fiches publiées "
+            f"({len(uuids_remplaces)} fiche(s) archivée(s) remplacée(s) par leur version en direct).")
         for key in list(repeat_rows):
-            repeat_rows[key], _ = fusionner_avec_archive(key, repeat_rows[key], uuids_live=uuids_live)
-        manifest_rows, _ = fusionner_avec_archive("manifest_media", manifest_rows, uuids_live=uuids_live)
+            repeat_rows[key] = fusionner_groupe(key, repeat_rows[key], uuids_live, uuids_remplaces)
+        manifest_rows = fusionner_groupe("manifest_media", manifest_rows, uuids_live, uuids_remplaces)
 
     log("Export des fichiers...")
     export_csv(main_rows, DATA_DIR / "eak_par_principal.csv")

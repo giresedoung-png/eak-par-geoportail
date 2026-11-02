@@ -1,3 +1,4 @@
 # _uuid à retirer définitivement du Géoportail (un par ligne, # = commentaire).
 # À utiliser uniquement pour un doublon ou une fiche à retirer volontairement ;
 # la suppression d'une fiche sur Kobo, elle, ne la retire PLUS du Géoportail.
+c1ab3436-05a8-498f-8563-c52033fc5421  # doublon de saisie de Minsili Kissinger (Nkonmekak, 11/08/2026), conservée : 51360a95 (soumise le 14/08/2026)
