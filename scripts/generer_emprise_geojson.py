@@ -56,6 +56,63 @@ def vers_latlon(easting, northing):
     return [round(lon, 7), round(lat, 7)]
 
 
+# ----------------------------------------------------------------------------
+# GIRATOIRE D'AKOM II — points d'implantation fournis par l'équipe Topographie
+# (fichier Points_Giratoire_Akom2.xlsx, coordonnées UTM 32N : la colonne
+# « LATITUDE » contient en réalité l'Est (X) et « LONGITUDE » le Nord (Y)).
+# Dans cette zone le levé par couples D/G s'interrompt (PK 80,424 -> 80,596) :
+# le contour réel de l'emprise suit alors le giratoire et la branche nord.
+# Ordre des bords (identifiés sur le plan des points) :
+#   bord DROIT  : P1..P9, puis la branche nord P18..P33, puis P34..P40
+#   bord GAUCHE : P17..P10, puis P51..P41
+# (P53..P60 sont des points de fermeture/doublons internes, non utilisés.)
+# ----------------------------------------------------------------------------
+GIRATOIRE_DROIT = list(range(1, 10)) + list(range(18, 34)) + list(range(34, 41))
+GIRATOIRE_GAUCHE = list(range(17, 9, -1)) + list(range(51, 40, -1))
+
+
+def charger_giratoire():
+    """Retourne {'D': [(E,N)...], 'G': [(E,N)...]} ou None si le fichier est absent."""
+    import openpyxl
+    cand = sorted(GIS_DIR.glob("*[Gg]iratoire*.xlsx")) if GIS_DIR.exists() else []
+    if not cand:
+        return None
+    ws = openpyxl.load_workbook(cand[0], read_only=True, data_only=True).active
+    pts = {}
+    for r in list(ws.iter_rows(values_only=True))[1:]:
+        if r and r[0] and r[1] is not None and r[2] is not None:
+            pts[int(str(r[0]).strip().upper().lstrip("P"))] = (float(r[1]), float(r[2]))
+    return {"D": [pts[i] for i in GIRATOIRE_DROIT if i in pts],
+            "G": [pts[i] for i in GIRATOIRE_GAUCHE if i in pts], "fichier": cand[0].name}
+
+
+def inserer_giratoire(pks, points, giratoire):
+    """Insère les bords du giratoire dans les listes D/G du ruban, à l'endroit du
+    trou du levé. Retourne (droit, gauche) en lon/lat, ou None si non applicable."""
+    import math
+    def proche(seq, cote, extremite):
+        cible = seq[extremite]
+        return min(range(len(pks)), key=lambda i: math.hypot(
+            points[pks[i]][cote][0] - cible[0], points[pks[i]][cote][1] - cible[1]))
+    res = {}
+    for cote in ("D", "G"):
+        seq = giratoire[cote]
+        if len(seq) < 2:
+            return None
+        i0 = proche(seq, cote, 0)
+        i1 = proche(seq, cote, -1)
+        # le début doit se raccorder au PK i0 et la fin au PK suivant i0+1
+        if i1 != i0 + 1:
+            print(f"  ⚠ giratoire : raccordement côté {cote} incohérent (PK {pks[i0]/1000:.3f} -> "
+                  f"{pks[i1]/1000:.3f}) — giratoire ignoré.")
+            return None
+        res[cote] = (i0, [vers_latlon(e, n) for e, n in seq])
+    if res["D"][0] != res["G"][0]:
+        print("  ⚠ giratoire : côtés D et G raccordés à des PK différents — ignoré.")
+        return None
+    return res
+
+
 def main():
     fichier = trouver_fichier_topo()
     if not fichier:
@@ -89,6 +146,17 @@ def main():
         # puis côté gauche du plus grand au plus petit (fermeture du ruban) —
         # exactement l'ordre demandé : "en partant du couple PK le plus petit
         # vers le plus grand".
+        giratoire = charger_giratoire()
+        n_giratoire = 0
+        if giratoire:
+            ins = inserer_giratoire(pks_complets, points, giratoire)
+            if ins:
+                i0 = ins["D"][0]
+                cote_droit = cote_droit[:i0 + 1] + ins["D"][1] + cote_droit[i0 + 1:]
+                cote_gauche = cote_gauche[:i0 + 1] + ins["G"][1] + cote_gauche[i0 + 1:]
+                n_giratoire = len(ins["D"][1]) + len(ins["G"][1])
+                print(f"  ✓ Giratoire d'Akom II intégré ({giratoire['fichier']}) : {n_giratoire} points, "
+                      f"entre PK {pks_complets[i0]/1000:.3f} et {pks_complets[i0+1]/1000:.3f} km")
         anneau = cote_droit + list(reversed(cote_gauche)) + [cote_droit[0]]
 
         feature_emprise = {
@@ -99,6 +167,7 @@ def main():
                 "pk_max_km": round(pks_complets[-1] / 1000.0, 3),
                 "nb_sections": len(pks_complets),
                 "source_fichier": fichier.name,
+                "giratoire_akom2_points": n_giratoire,
             },
             "geometry": {"type": "Polygon", "coordinates": [anneau]},
         }
