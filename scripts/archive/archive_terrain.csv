@@ -1,10 +1,13 @@
-_uuid,_id,_index_repeat,titre_type_occupation_terrain,numero_titre_foncier,superficie_totale_terrain,superficie_affectee_terrain,usage_terrain,kp_terrain
-bf9e5702-c119-400c-b60f-9ce6aeba6df7,885447513,0,Parcelle privée ,107,30000,567.72,Habitation ,
-a5a601b7-a57a-4ab1-a8f3-23fe03160522,885450141,1,Titre foncier,321,36.8,36.8,Espace commercial ,PK 0+20
-ac8ed322-d0e8-4332-a7e3-95d7aa4c7e88,890878727,2,Habitation,396,753,372.06,Construction  de la maison,
-04d62b5b-bad3-4750-babc-58fd3f0cdb7c,891963342,3,Terrain privé,449,20000,648,,
-6153124a-a4f2-40fa-9f0c-22c2827d1238,818726584,1,,,,,Subsistence,
-220c3e14-2937-4914-8ba4-4907c1bcf368,832392790,2,Résidence ,,10000,2000,Résidence et cultures ,
-7fc363dc-7061-4c1a-b3e3-43efba45ebc0,832395017,3,,,1606.05,1606.05,Champ de manioc,
-70a2a2e9-0a88-4051-96b4-77c762c72a96,862154358,4,Imatriculation Directe- village Azem,591,198,198,Construction,
-f2d1c294-2ff8-48d0-90f4-13d7cd4d6570,878460258,5,Terrain vierge,428,10208,1859,Usage personnel ( plan d'habitation dans l'avernir),
+_uuid,_id,_index_repeat,titre_type_occupation_terrain,numero_titre_foncier,superficie_totale_terrain,superficie_affectee_terrain,usage_terrain,kp_terrain,C_identification_nouveau/C4_biens_actifs/rep_terrain/titre_type_occupation_terrain,C_identification_nouveau/C4_biens_actifs/rep_terrain/numero_titre_foncier,C_identification_nouveau/C4_biens_actifs/rep_terrain/superficie_totale_terrain,C_identification_nouveau/C4_biens_actifs/rep_terrain/superficie_affectee_terrain,C_identification_nouveau/C4_biens_actifs/rep_terrain/usage_terrain,C_identification_nouveau/C4_biens_actifs/rep_terrain/kp_terrain
+bf9e5702-c119-400c-b60f-9ce6aeba6df7,885447513,0,Parcelle privée ,107,30000,567.72,Habitation ,,,,,,,
+ac8ed322-d0e8-4332-a7e3-95d7aa4c7e88,890878727,2,Habitation,396,753,372.06,Construction  de la maison,,,,,,,
+04d62b5b-bad3-4750-babc-58fd3f0cdb7c,891963342,3,Terrain privé,449,20000,648,,,,,,,,
+6153124a-a4f2-40fa-9f0c-22c2827d1238,818726584,1,,,,,Subsistence,,,,,,,
+220c3e14-2937-4914-8ba4-4907c1bcf368,832392790,2,Résidence ,,10000,2000,Résidence et cultures ,,,,,,,
+7fc363dc-7061-4c1a-b3e3-43efba45ebc0,832395017,3,,,1606.05,1606.05,Champ de manioc,,,,,,,
+70a2a2e9-0a88-4051-96b4-77c762c72a96,862154358,4,Imatriculation Directe- village Azem,591,198,198,Construction,,,,,,,
+f2d1c294-2ff8-48d0-90f4-13d7cd4d6570,878460258,5,Terrain vierge,428,10208,1859,Usage personnel ( plan d'habitation dans l'avernir),,,,,,,
+a5a601b7-a57a-4ab1-a8f3-23fe03160522,885450141,0,,,,,,,Titre foncier,321,36.8,36.8,Espace commercial ,PK 0+20
+cd9ee4df-1634-447e-bf9e-a66aa7d3a410,903174273,0,,,,,,,,17109,120000.0,5520.0,,
+fae87ad0-652b-48dd-8a3e-f23ba209f8cd,903175144,0,,,,,,,Parcelle privé,8694,15803.0,417.0,Terrain privé,
+b0d41e5a-5972-4841-88dd-c5c1ad7ab40e,903182076,0,,,,,,,,11 363,10000.0,1787.0,Agriculture ,
