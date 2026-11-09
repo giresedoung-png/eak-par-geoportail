@@ -36,7 +36,7 @@ jobs:
         run: python3 scripts/analyse_emprise.py
       - name: Fusionner Kobo + historique et calculer les statistiques
         run: python3 scripts/merge_sources.py
-      - name: Publier le contenu du dossier site/ sur InfinityFree (FTP)
+      - name: Publier le site (pages + données) sur InfinityFree (FTP)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -45,18 +45,25 @@ jobs:
           local-dir: ./site/
           server-dir: ./eakpar.fwh.is/htdocs/
           dangerous-clean-slate: false
-          # Contournement temporaire : ces 4 fichiers sont bloqués côté
-          # InfinityFree (erreur "553 Permission denied", y compris via leur
-          # File Manager web — donc un blocage serveur, pas un souci du
-          # pipeline). Exclus ici pour ne pas bloquer tout le déploiement le
-          # temps que ce soit résolu avec l'hébergeur. À retirer une fois le
-          # problème résolu côté InfinityFree.
+          # Les médias sont envoyés séparément (étape suivante). Nom d'état DISTINCT :
+          # sans état antérieur, FTP-Deploy ne supprime rien (en particulier aucune
+          # des photos déjà présentes sur le serveur).
+          state-name: .ftp-deploy-sync-state-site.json
           exclude: |
-            media/legacy/**
-      - name: Enregistrer le fichier de suivi (checkpoint) pour la prochaine exécution
+            media/**
+      - name: Envoyer les nouvelles photos/signatures (tolérant aux fichiers verrouillés)
+        continue-on-error: true
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: python3 scripts/upload_media_ftp.py
+      - name: Enregistrer le checkpoint et l'archive des fiches pour la prochaine exécution
+        if: always()
         run: |
           git config user.name "eak-par-bot"
           git config user.email "actions@github.com"
-          git add scripts/last_sync.json
-          git diff --quiet --cached || git commit -m "chore: mise a jour du checkpoint de synchronisation [skip ci]"
+          git add scripts/last_sync.json scripts/archive
+          git diff --quiet --cached || git commit -m "chore: mise a jour du checkpoint et de l'archive des fiches [skip ci]"
+          git pull --rebase -q origin main || true
           git push
